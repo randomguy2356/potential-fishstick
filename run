@@ -1,3 +1,4 @@
+set -e
 g++ -c glad.c
-g++ main.cpp -o ../../bin/opengl glad.o -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl
+g++ -Wall -Wextra -Werror main.cpp -o ../../bin/opengl glad.o -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl
 opengl
