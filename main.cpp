@@ -102,13 +102,13 @@ int main(){
 	glBindVertexArray(VAO);
 	//VBO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 	//EBO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
 	//EBOWF
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOWF);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesWF), indicesWF, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesWF), indicesWF, GL_DYNAMIC_DRAW);
 	
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	glCompileShader(vertexShader);
@@ -129,11 +129,14 @@ int main(){
 		glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shaderProgram);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 		if(!wireframe){		
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
 		}
 		else{
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesWF), indicesWF, GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOWF);
 			glDrawElements(GL_LINES, 14, GL_UNSIGNED_INT, 0);	
 		}
@@ -164,4 +167,24 @@ void processInput(GLFWwindow *window){
 		}
 	}
 	else{toggle = true;}
+	if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
+		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 3); i++){
+			vertices[(i*3)] += 0.05f;
+		}
+	}
+	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
+		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 3); i++){
+			vertices[(i*3)] -= 0.05f;
+		}
+	}
+	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 3); i++){
+			vertices[(i*3) + 1] += 0.05f;
+		}
+	}
+	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 3); i++){
+			vertices[(i*3) + 1] -= 0.05f;
+		}
+	}
 }
