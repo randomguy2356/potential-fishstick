@@ -1,0 +1,41 @@
+float vertices[] = {
+        //base
+         0.5f,  0.5f, 0.0f,   0.902f, 0.812f, 0.471f,            //top right
+         0.5f, -0.5f, 0.0f,   0.902f / 1.5, 0.812f / 1.5, 0.471f / 1.5,//bottom right
+        -0.5f,  0.5f, 0.0f,   0.902f, 0.812f, 0.471f,            //top left
+        -0.5f, -0.5f, 0.0f,   0.902f / 1.5, 0.812f / 1.5, 0.471f / 1.5,//bottom left
+        //roof
+        -0.55f,  0.5f, 0.0f,  0.890f, 0.278f, 0.204f,            //bottom left
+         0.55f,  0.5f, 0.0f,  0.890f, 0.278f, 0.204f,            //bottom right
+         0.0f,  0.95f, 0.0f,  0.890f, 0.278f, 0.204f,            //house roof top
+        //window
+        -0.4f,  0.4f, 0.0f,   0.635f, 0.902f, 0.961f,            //top left
+        -0.1f,  0.4f, 0.0f,   0.635f, 0.902f, 0.961f,            //top right
+        -0.1f, -0.1f, 0.0f,   0.635f, 0.902f, 0.961f,            //bottom right
+        -0.4f, -0.1f, 0.0f,   0.635f, 0.902f, 0.961f             //bottom left
+};
+
+unsigned int indices[] = {
+        0, 1, 2,//first triangle
+        2, 3, 1,//second triangle
+        4, 5, 6,//roof
+        7, 8, 9,//window1
+        7, 9, 10//window2
+};
+
+unsigned int indicesWF[] = {
+        0, 1,
+        0, 2,
+        1, 2,
+        2, 3,
+        3, 1,
+        4, 5,
+        4, 6,
+        5, 6,
+        7, 8,
+        7, 9,
+        8, 9,
+        7, 10,
+        9, 10
+};
+

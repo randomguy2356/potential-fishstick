@@ -8,6 +8,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
 endif()
 
-add_executable(opengl main.cpp glad.c)
+add_executable(opengl src/main.cpp glad.c)
 target_compile_options(opengl PRIVATE -W -Wall -Wextra)
 target_link_libraries(opengl pthread Xrandr Xi dl GL X11 glfw)

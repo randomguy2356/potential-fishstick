@@ -1,2 +1,2 @@
 g++ -c glad.c
-g++ main.cpp -o ../../bin/opengl glad.o -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl
+g++ src/main.cpp -o ../../bin/opengl glad.o -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl

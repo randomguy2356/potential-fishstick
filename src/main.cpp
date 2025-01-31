@@ -1,5 +1,6 @@
 #define GLFW_INCLUDE_NONE
-#include"glad.h"
+#include"../glad.h"
+#include"shader.h"
 #include<GLFW/glfw3.h>
 #include<iostream>
 
@@ -11,54 +12,20 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
 float vertices[] = {
-	//base
-	 0.5f,  0.5f, 0.0f,   0.902f, 0.812f, 0.471f,//top right
-	 0.5f, -0.5f, 0.0f,   0.802f, 0.712f, 0.371f,//bottom right
-	-0.5f,  0.5f, 0.0f,   0.902f, 0.812f, 0.471f,//top left
-	-0.5f, -0.5f, 0.0f,   0.802f, 0.712f, 0.371f,//bottom left
-	//roof
-	-0.5f,  0.5f, 0.0f,   0.790f, 0.178f, 0.104f,//bottom left
-	 0.5f,  0.5f, 0.0f,   0.790f, 0.178f, 0.104f,//bottom right
-	 0.0f,  0.9f, 0.0f,   0.890f, 0.278f, 0.204f //house roof top
+     0.0,  0.5,  0.0,   1.0, 0.0, 0.0, //triangle top red
+    -0.5, -0.5,  0.0,   0.0, 1.0, 0.0, //triangle bottom left green
+     0.5, -0.5,  0.0,   0.0, 0.0, 1.0  //triangle bottom right blue
 };
 
 unsigned int indices[] = {
-	0, 1, 2,//first triangle
-	2, 3, 1,//second triangle
-	4, 5, 6	//roof
+    0,1,2
 };
 
 unsigned int indicesWF[] = {
-	0, 1,
-	0, 2,
-	1, 2,
-	2, 3,
-	3, 1,
-	4, 5,
-	4, 6,
-	5, 6
+    0,1,
+    0,2,
+    1,2
 };
-
-const char *vertexShaderSource = "#version 330 core\n"
-	"layout (location = 0) in vec3 aPos;\n"
-	"layout (location = 1) in vec3 aCol;\n"
-	"out vec4 vertexColor;\n"
-	"void main(){\n"
-	"	gl_Position = vec4(aPos, 1.0);\n"
-	"	vertexColor = vec4(aCol, 1.0);\n"
-	"}\n";
-unsigned int vertexShader;
-
-const char *fragmentShaderSource = "#version 330 core\n"
-	"out vec4 FragColor;\n"
-	"in vec4 vertexColor;\n"
-	"\n"
-	"void main(){\n"
-	"FragColor = vertexColor;\n"
-	"}\n";
-unsigned int fragmentShader;
-
-unsigned int shaderProgram;
 
 unsigned int VBO;
 unsigned int VAO;
@@ -76,7 +43,7 @@ int main(){
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	
+
 	GLFWwindow* window = glfwCreateWindow(800, 600, window_name, NULL, NULL);
 	if(window == NULL){
 		std::cout << "failed to create window" << '\n';
@@ -84,23 +51,18 @@ int main(){
 		glfwTerminate();
 		return -1;
 	}
-	
+
 	glfwMakeContextCurrent( window );
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	
-	
+
+
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
-	
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	
-	shaderProgram = glCreateProgram();
-	
+    Shader shader("src/shaders/vertShader.vert", "src/shaders/fragShader.frag");
+
 	glGenBuffers(1, &EBO);
 	glGenBuffers(1, &EBOWF);
 	glGenBuffers(1, &VBO);
@@ -116,65 +78,33 @@ int main(){
 	//EBOWF
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOWF);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesWF), indicesWF, GL_DYNAMIC_DRAW);
-	
-	GLint success;
-	GLchar infoLog[512];
-	
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-	    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-	    std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-	
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-	    glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-	    std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-	
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success) {
-	    glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-	    std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-	}
-	
-	
+
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	
+
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-	
+
 	while(!glfwWindowShouldClose(window)){
 		processInput(window);
-		
+
 		glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		
-		glUseProgram(shaderProgram);
+
+        shader.use();
 		glBindVertexArray(VAO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 		if(!wireframe){
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-			glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 		}
 		else{
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOWF);
-			glDrawElements(GL_LINES, 16, GL_UNSIGNED_INT, 0);	
+			glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
 		}
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-	glDeleteShader(fragmentShader);
-	glDeleteShader(vertexShader);
-	
 	glfwTerminate();
 	return 0;
 }
@@ -225,3 +155,4 @@ void processInput(GLFWwindow *window){
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 	}
 }
+
