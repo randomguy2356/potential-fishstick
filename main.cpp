@@ -3,6 +3,7 @@
 #include<GLFW/glfw3.h>
 #include<iostream>
 
+#include<cmath>
 
 const char* window_name = "hello world";
 
@@ -35,16 +36,17 @@ unsigned int indicesWF[] = {
 
 const char *vertexShaderSource = "#version 330 core\n"
 	"layout (location = 0) in vec3 aPos;\n"
-	"out vec4 vertexColor;\n"
+	"uniform float multiplier;\n"
+	"out vec4 vertexColor;"
 	"void main(){\n"
 	"	gl_Position = vec4(aPos, 1.0);\n"
-	"	vertexColor = vec4((aPos.x / 2) + 0.5f, (aPos.y / 2) + 0.5f, (aPos.z / 2) + 0.5f, 1.0);\n"
+	"	vertexColor = vec4((aPos.x / 2 + 0.5f) * multiplier, (aPos.y / 2 + 0.5f) * multiplier, (aPos.z / 2 + 0.5f) * multiplier, 1.0f);"
 	"}\n";
 unsigned int vertexShader;
 
 const char *fragmentShaderSource = "#version 330 core\n"
 	"out vec4 FragColor;\n"
-	"in vec4 vertexColor;\n"
+	"in vec4 vertexColor;"
 	"\n"
 	"void main(){\n"
 	"FragColor = vertexColor;\n"
@@ -128,9 +130,16 @@ int main(){
 		
 		glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		
+		float timeValue = glfwGetTime();
+		float multiplier = (sin(timeValue) / 2.0f) + 0.5f;
+		int vertexColorLocation = glGetUniformLocation(shaderProgram, "multiplier");
+		std::cout << vertexColorLocation << '\n';
+		
 		glUseProgram(shaderProgram);
+		glUniform1f(vertexColorLocation, multiplier);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-		if(!wireframe){		
+		if(!wireframe){
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
