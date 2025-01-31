@@ -134,7 +134,6 @@ int main(){
 		float timeValue = glfwGetTime();
 		float multiplier = (sin(timeValue) / 2.0f) + 0.5f;
 		int vertexColorLocation = glGetUniformLocation(shaderProgram, "multiplier");
-		std::cout << vertexColorLocation << '\n';
 		
 		glUseProgram(shaderProgram);
 		glUniform1f(vertexColorLocation, multiplier);
