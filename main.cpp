@@ -11,17 +11,21 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
 float vertices[] = {
-	 0.5f,  0.5f, 0.0f, //top right
-	 0.5f, -0.5f, 0.0f, //bottom right
-	-0.5f,  0.5f, 0.0f, //top left
-	-0.5f, -0.5f, 0.0f, //bottom left
-	 0.0f,  0.9f, 0.0f  //house roof top
+	//base
+	 0.5f,  0.5f, 0.0f,   0.902f, 0.812f, 0.471f,//top right
+	 0.5f, -0.5f, 0.0f,   0.802f, 0.712f, 0.371f,//bottom right
+	-0.5f,  0.5f, 0.0f,   0.902f, 0.812f, 0.471f,//top left
+	-0.5f, -0.5f, 0.0f,   0.802f, 0.712f, 0.371f,//bottom left
+	//roof
+	-0.5f,  0.5f, 0.0f,   0.790f, 0.178f, 0.104f,//bottom left
+	 0.5f,  0.5f, 0.0f,   0.790f, 0.178f, 0.104f,//bottom right
+	 0.0f,  0.9f, 0.0f,   0.890f, 0.278f, 0.204f //house roof top
 };
 
 unsigned int indices[] = {
 	0, 1, 2,//first triangle
 	2, 3, 1,//second triangle
-	0, 2, 4	//roof
+	4, 5, 6	//roof
 };
 
 unsigned int indicesWF[] = {
@@ -29,24 +33,25 @@ unsigned int indicesWF[] = {
 	0, 2,
 	1, 2,
 	2, 3,
-	1, 3,
-	0, 4,
-	2, 4
+	3, 1,
+	4, 5,
+	4, 6,
+	5, 6
 };
 
 const char *vertexShaderSource = "#version 330 core\n"
 	"layout (location = 0) in vec3 aPos;\n"
-	"uniform float multiplier;\n"
-	"out vec4 vertexColor;"
+	"layout (location = 1) in vec3 aCol;\n"
+	"out vec4 vertexColor;\n"
 	"void main(){\n"
 	"	gl_Position = vec4(aPos, 1.0);\n"
-	"	vertexColor = vec4((aPos.x / 2 + 0.5f) * multiplier, (aPos.y / 2 + 0.5f) * multiplier, (aPos.z / 2 + 0.5f) * multiplier, 1.0f);"
+	"	vertexColor = vec4(aCol, 1.0);\n"
 	"}\n";
 unsigned int vertexShader;
 
 const char *fragmentShaderSource = "#version 330 core\n"
 	"out vec4 FragColor;\n"
-	"in vec4 vertexColor;"
+	"in vec4 vertexColor;\n"
 	"\n"
 	"void main(){\n"
 	"FragColor = vertexColor;\n"
@@ -112,18 +117,40 @@ int main(){
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOWF);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesWF), indicesWF, GL_DYNAMIC_DRAW);
 	
+	GLint success;
+	GLchar infoLog[512];
+	
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	glCompileShader(vertexShader);
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+	    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+	    std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}
 	
 	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
 	glCompileShader(fragmentShader);
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+	    glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+	    std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}
 	
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
 	glLinkProgram(shaderProgram);
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if (!success) {
+	    glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+	    std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+	}
 	
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 	
 	while(!glfwWindowShouldClose(window)){
 		processInput(window);
@@ -131,22 +158,16 @@ int main(){
 		glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
-		float timeValue = glfwGetTime();
-		float multiplier = (sin(timeValue) / 2.0f) + 0.5f;
-		int vertexColorLocation = glGetUniformLocation(shaderProgram, "multiplier");
-		
 		glUseProgram(shaderProgram);
-		glUniform1f(vertexColorLocation, multiplier);
+		glBindVertexArray(VAO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 		if(!wireframe){
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
 		}
 		else{
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesWF), indicesWF, GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOWF);
-			glDrawElements(GL_LINES, 14, GL_UNSIGNED_INT, 0);	
+			glDrawElements(GL_LINES, 16, GL_UNSIGNED_INT, 0);	
 		}
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -176,23 +197,31 @@ void processInput(GLFWwindow *window){
 	}
 	else{toggle = true;}
 	if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 3); i++){
-			vertices[(i*3)] += 0.05f;
+		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 6); i++){
+			vertices[(i*6)] += 0.05f;
 		}
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 	}
 	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 3); i++){
-			vertices[(i*3)] -= 0.05f;
+		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 6); i++){
+			vertices[(i*6)] -= 0.05f;
 		}
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 	}
 	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 3); i++){
-			vertices[(i*3) + 1] += 0.05f;
+		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 6); i++){
+			vertices[(i*6) + 1] += 0.05f;
 		}
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 	}
 	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 3); i++){
-			vertices[(i*3) + 1] -= 0.05f;
+		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 6); i++){
+			vertices[(i*6) + 1] -= 0.05f;
 		}
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 	}
 }
