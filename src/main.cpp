@@ -11,10 +11,13 @@ const char* window_name = "hello world";
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
+double xoffset = 0.0f;
+double yoffset = 0.0f;
+
 float vertices[] = {
-     0.0,  0.5,  0.0,   1.0, 0.0, 0.0, //triangle top red
-    -0.5, -0.5,  0.0,   0.0, 1.0, 0.0, //triangle bottom left green
-     0.5, -0.5,  0.0,   0.0, 0.0, 1.0  //triangle bottom right blue
+     0.0f,  0.5f,  0.0f,   1.0f, 0.0f, 0.0f, //triangle top red
+    -0.5f, -0.5f,  0.0f,   0.0f, 1.0f, 0.0f, //triangle bottom left green
+     0.5f, -0.5f,  0.0f,   0.0f, 0.0f, 1.0f  //triangle bottom right blue
 };
 
 unsigned int indices[] = {
@@ -62,7 +65,6 @@ int main(){
 		return -1;
 	}
     Shader shader("src/shaders/vertShader.vert", "src/shaders/fragShader.frag");
-
 	glGenBuffers(1, &EBO);
 	glGenBuffers(1, &EBOWF);
 	glGenBuffers(1, &VBO);
@@ -71,13 +73,13 @@ int main(){
 	glBindVertexArray(VAO);
 	//VBO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	//EBO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 	//EBOWF
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOWF);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesWF), indicesWF, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesWF), indicesWF, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -92,8 +94,10 @@ int main(){
 		glClear(GL_COLOR_BUFFER_BIT);
 
         shader.use();
+        shader.setFloat("xoffset", (float)xoffset);
+        shader.setFloat("yoffset", (float)yoffset);
+
 		glBindVertexArray(VAO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 		if(!wireframe){
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
@@ -126,33 +130,16 @@ void processInput(GLFWwindow *window){
 		}
 	}
 	else{toggle = true;}
-	if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 6); i++){
-			vertices[(i*6)] += 0.05f;
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-	}
-	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 6); i++){
-			vertices[(i*6)] -= 0.05f;
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-	}
-	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 6); i++){
-			vertices[(i*6) + 1] += 0.05f;
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-	}
-	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-		for(int i = 0; i < (int)(sizeof(vertices) / sizeof(float) / 6); i++){
-			vertices[(i*6) + 1] -= 0.05f;
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-	}
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        xoffset += 5.0f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        xoffset -= 5.0f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        yoffset += 5.0f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        yoffset -= 5.0f;
+    }
 }
-
