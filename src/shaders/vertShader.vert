@@ -1,14 +1,17 @@
 #version 330 core
-precision highp float;
 layout (location = 0) in vec3 vPos;
 layout (location = 1) in vec3 vCol;
+layout (location = 2) in vec2 vtexCoord;
 
-uniform float xoffset;
-uniform float yoffset;
+uniform vec2 offset;
 
 out vec4 vertexColor;
+out vec2 texCoord;
 
+int scale = 1;
 void main(){
-    gl_Position = vec4(vPos.x + xoffset / 100, vPos.y + yoffset / 100, vPos.z, 1.0);
+    vec2 xyPos = vec2(vPos.xy);
+    gl_Position = vec4((xyPos / scale) + (offset / 100), vPos.z, 1.0f);
     vertexColor = vec4(vCol, 1.0);
+    texCoord = vtexCoord;
 }

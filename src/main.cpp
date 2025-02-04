@@ -1,6 +1,7 @@
 #define GLFW_INCLUDE_NONE
 #include"../glad.h"
 #include"shader.h"
+#include"../stb_image.h"
 #include<GLFW/glfw3.h>
 #include<iostream>
 
@@ -11,23 +12,24 @@ const char* window_name = "hello world";
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
-double xoffset = 0.0f;
-double yoffset = 0.0f;
+float offset[2] = {0.0f, 0.0f};
 
 float vertices[] = {
-     0.0f,  0.5f,  0.0f,   1.0f, 0.0f, 0.0f, //triangle top red
-    -0.5f, -0.5f,  0.0f,   0.0f, 1.0f, 0.0f, //triangle bottom left green
-     0.5f, -0.5f,  0.0f,   0.0f, 0.0f, 1.0f  //triangle bottom right blue
+     0.5f, 0.5f,-0.5f,    1.0f, 1.0f, 0.0f,  1.0f, 1.0f,//top right
+    -0.5f,-0.5f,-0.5f,    0.0f, 1.0f, 1.0f,  0.0f, 0.0f,//bottom left
+     0.5f,-0.5f,-0.5f,    1.0f, 0.0f, 1.0f,  0.0f, 1.0f,//bottom right
+    -0.5f, 0.5f, 0.5f,    1.0f, 1.0f, 0.0f,  1.0f, 0.0f,//top left
 };
 
 unsigned int indices[] = {
-    0,1,2
+    0,1,2,
+    0,3,1
 };
 
 unsigned int indicesWF[] = {
     0,1,
     0,2,
-    1,2
+    1,2,
 };
 
 unsigned int VBO;
@@ -36,6 +38,8 @@ unsigned int EBO;
 unsigned int EBOWF;
 
 bool wireframe = false;
+
+float windowSize[] = {800.0, 600.0, 1.0, 1.0};
 
 int main(){
 	if(!glfwInit()){
@@ -47,7 +51,11 @@ int main(){
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, window_name, NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(
+            windowSize[0], windowSize[1],
+            window_name,
+            NULL, NULL
+    );
 	if(window == NULL){
 		std::cout << "failed to create window" << '\n';
 		std::cout << window << '\n';
@@ -64,7 +72,10 @@ int main(){
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
-    Shader shader("src/shaders/vertShader.vert", "src/shaders/fragShader.frag");
+    Shader shader(
+            "src/shaders/vertShader.vert",
+            "src/shaders/fragShader.frag"
+    );
 	glGenBuffers(1, &EBO);
 	glGenBuffers(1, &EBOWF);
 	glGenBuffers(1, &VBO);
@@ -76,16 +87,77 @@ int main(){
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	//EBO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER,
+            sizeof(indices),
+            indices,
+            GL_STATIC_DRAW
+    );
 	//EBOWF
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOWF);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesWF), indicesWF, GL_STATIC_DRAW);
+	glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER,
+            sizeof(indicesWF),
+            indicesWF,
+            GL_STATIC_DRAW
+    );
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glVertexAttribPointer(
+            0, 3,
+            GL_FLOAT,
+            GL_FALSE,
+            8 * sizeof(float),
+            (void*)0
+    );
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(
+            1, 3,
+            GL_FLOAT,
+            GL_FALSE,
+            8 * sizeof(float),
+            (void*)(3 * sizeof(float))
+    );
 	glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(
+            2, 2,
+            GL_FLOAT,
+            GL_FALSE,
+            8 * sizeof(float),
+            (void*)(6 * sizeof(float))
+    );
+    glEnableVertexAttribArray(2);
+
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("src/container.jpg", &width, &height, &nrChannels, 0);
+    if(data){
+        glTexImage2D(
+                GL_TEXTURE_2D, 0,
+                GL_RGB,
+                width,
+                height, 0,
+                GL_RGB,
+                GL_UNSIGNED_BYTE,
+                data
+        );
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else{
+        std::cout << "failed to load texture" << std::endl;
+        return -1;
+    }
+
 
 	while(!glfwWindowShouldClose(window)){
 		processInput(window);
@@ -94,17 +166,28 @@ int main(){
 		glClear(GL_COLOR_BUFFER_BIT);
 
         shader.use();
-        shader.setFloat("xoffset", (float)xoffset);
-        shader.setFloat("yoffset", (float)yoffset);
-
-		glBindVertexArray(VAO);
+        shader.setVec2("offset", offset);
+        shader.setVec4("windowSize", windowSize);
+        glBindTexture(GL_TEXTURE_2D, texture);
+	    shader.setSampler2D("Texture", 0);
+        glBindVertexArray(VAO);
 		if(!wireframe){
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+			glDrawElements(
+                    GL_TRIANGLES,
+                    sizeof(indices) / 4,
+                    GL_UNSIGNED_INT,
+                    0
+            );
 		}
 		else{
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOWF);
-			glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
+			glDrawElements(
+                    GL_LINES,
+                    sizeof(indicesWF) / 4,
+                    GL_UNSIGNED_INT,
+                    0
+            );
 		}
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -114,8 +197,15 @@ int main(){
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
-	(void)window;
+	Shader shader(
+            "src/shaders/vertShader.vert",
+            "src/shaders/fragShader.frag"
+    );
+    (void)window;
 	glViewport(0, 0, width, height);
+    windowSize[0] = width;
+    windowSize[1] = height;
+    shader.setVec4("windowSize", windowSize);
 }
 
 bool toggle = true;
@@ -131,15 +221,15 @@ void processInput(GLFWwindow *window){
 	}
 	else{toggle = true;}
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        xoffset += 5.0f;
+        offset[0] += 2.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        xoffset -= 5.0f;
+        offset[0] -= 2.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        yoffset += 5.0f;
+        offset[1] += 2.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        yoffset -= 5.0f;
+        offset[1] -= 2.0f;
     }
 }

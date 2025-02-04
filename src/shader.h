@@ -104,6 +104,15 @@ public:
 	void setFloat(const std::string &name, int value) const{
         glUniform1f(glGetUniformLocation(ID, name.c_str()), (int)value);
     }
+    void setVec4(const std::string &name, float value[]) const{
+        glUniform4f(glGetUniformLocation(ID, name.c_str()), value[0], value[1], value[2], value[3]);
+    }
+    void setVec2(const std::string &name, float value[]) const{
+        glUniform2f(glGetUniformLocation(ID, name.c_str()), value[0], value[1]);
+    }
+    void setSampler2D(const std::string &name, unsigned int value){
+        glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+    }
 };
 
 #endif
